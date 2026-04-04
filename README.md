@@ -1,7 +1,7 @@
 ## CodeGator.MudBlazor: 
 ---
 
-[![Build Status](https://dev.azure.com/codegator/CodeGator.MudBlazor/_apis/build/status%2FCodeGator.CodeGator.MudBlazor?branchName=main)](https://dev.azure.com/codegator/CodeGator.MudBlazor/_build/latest?definitionId=110&branchName=main)
+[![Build Status](https://dev.azure.com/codegator/CodeGator.MudBlazor/_apis/build/status%2FCodeGator.CodeGator.MudBlazor?branchName=main)](https://dev.azure.com/codegator/CodeGator.MudBlazor/_build/latest?definitionId=123&branchName=main)
 
 ![NuGet Version](https://img.shields.io/nuget/v/CodeGator.MudBlazor)
 

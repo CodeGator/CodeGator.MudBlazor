@@ -1,0 +1,61 @@
+<g data-cg-node="@Node.Id"
+   transform="translate(@Tx, @Ty)"
+   data-tx="@Tx"
+   data-ty="@Ty">
+    @if (IsSvgHref)
+    {
+        @if (Selected)
+        {
+            <rect x="-112" y="-30" width="224" height="60" rx="6" fill="none" stroke="var(--mud-palette-primary, #0d6efd)" stroke-width="3" pointer-events="none" style="filter: drop-shadow(0 0 4px rgba(13,110,253,0.35));" />
+        }
+        <title>@TooltipText</title>
+        <image href="@Node.SvgHref"
+               x="-110"
+               y="-28"
+               width="220"
+               height="56"
+               preserveAspectRatio="xMidYMid meet"
+               style="cursor:grab; pointer-events:auto;" />
+    }
+    else if (IsSvgMarkup)
+    {
+        @if (Selected)
+        {
+            <rect x="-112" y="-30" width="224" height="60" rx="6" fill="none" stroke="var(--mud-palette-primary, #0d6efd)" stroke-width="3" pointer-events="none" style="filter: drop-shadow(0 0 4px rgba(13,110,253,0.35));" />
+        }
+        <title>@TooltipText</title>
+        <g transform="translate(-110,-28)" style="cursor:grab;">
+            @((MarkupString)Node.SvgMarkup!)
+        </g>
+    }
+    else if (IsCustom)
+    {
+        <foreignObject x="-110" y="-28" width="220" height="56" style="pointer-events: auto;">
+            <div xmlns="http://www.w3.org/1999/xhtml"
+                 style="width:220px;height:56px;box-sizing:border-box;pointer-events:auto;cursor:grab;overflow:hidden;">
+                @NodeTemplate!(CreateContext())
+            </div>
+        </foreignObject>
+    }
+    else
+    {
+        <foreignObject x="-110" y="-28" width="220" height="56" style="pointer-events: auto;">
+            <div xmlns="http://www.w3.org/1999/xhtml"
+                 style="width:220px;height:56px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;pointer-events:auto;">
+                <MudTooltip Text="@TooltipText">
+                    <MudPaper Elevation="@(Selected ? 8 : 2)"
+                              Outlined="true"
+                              Class="@(string.IsNullOrEmpty(ThemeClass) ? "mud-width-full" : $"mud-width-full {ThemeClass}")"
+                              Style="height:52px;display:flex;align-items:center;justify-content:center;padding:4px 10px;box-sizing:border-box;cursor:grab;">
+                        <MudText Typo="Typo.subtitle2"
+                                 Align="Align.Center"
+                                 Class="mb-0 mud-width-full"
+                                 Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            @Node.Label
+                        </MudText>
+                    </MudPaper>
+                </MudTooltip>
+            </div>
+        </foreignObject>
+    }
+</g>

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>CodeGator.MudBlazor</RootNamespace>
+		<AssemblyName>CodeGator.MudBlazor</AssemblyName>
+		<DebugType>embedded</DebugType>
+		<Description>MudBlazor controls that are used by other CodeGator solutions</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>packageDefaultIcon-128x128.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/CodeGator/CodeGator.MudBlazor</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/CodeGator/CodeGator.MudBlazor</RepositoryUrl>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="MudBlazor" Version="9.2.0" />
+		<PackageReference Include="Nerdbank.GitVersioning" Version="3.9.50">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Enums\" />
+		<Folder Include="Events\" />
+		<Folder Include="Models\" />
+	</ItemGroup>
+
+</Project>

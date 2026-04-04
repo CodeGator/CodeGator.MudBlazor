@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Tests/">
+    <Project Path="../tests/CodeGator.MudBlazor.UnitTests/CodeGator.MudBlazor.UnitTests.csproj" Id="1ff727ab-6fae-496e-a66a-f4f3b598b924" />
+  </Folder>
+  <Project Path="CodeGator.MudBlazor/CodeGator.MudBlazor.csproj" />
+</Solution>

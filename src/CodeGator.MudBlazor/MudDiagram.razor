@@ -1,0 +1,155 @@
+@inherits MudComponentBase
+@implements IAsyncDisposable
+
+<MudPaper Class="@RootClass"
+          Elevation="@Elevation"
+          Outlined="@Outlined"
+          Square="@Square"
+          Style="@Style"
+          @attributes="UserAttributes">
+    <MudStack Spacing="3" Class="mud-width-full">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+            <MudText Typo="Typo.h6" Class="mb-0">@Title</MudText>
+            @if (!string.IsNullOrWhiteSpace(ContextBadge))
+            {
+                <MudChip T="string" Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">@ContextBadge</MudChip>
+            }
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">@Subtitle</MudText>
+        }
+
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            Drag nodes to rearrange. Drag on empty space to box-select, then drag any selected node. Click a node without dragging for details. Mouse wheel zooms.
+        </MudText>
+
+        @if (Legend is not null)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" aria-label="Legend">
+                @Legend
+            </MudStack>
+        }
+
+        <MudPaper Class="mud-width-full pa-0" Elevation="0" Outlined="true">
+            <div @ref="_svgWrapRef" class="overflow-auto mud-width-full" style="@($"max-height: {ViewportMaxHeightCss};")">
+            <svg @ref="_svgRef"
+                 role="img"
+                 aria-label="Diagram"
+                 data-cg-selection="@SelectionDataAttribute"
+                 width="@Fsvg(SvgPixelWidth)"
+                 height="@Fsvg(SvgPixelHeight)"
+                 preserveAspectRatio="none"
+                 viewBox="@Fsvg(_displayMinX) @Fsvg(_displayMinY) @Fsvg(DisplayWidth) @Fsvg(DisplayHeight)">
+                <defs>
+                    <marker id="@_markerId"
+                            viewBox="0 0 10 10"
+                            refX="9"
+                            refY="5"
+                            markerWidth="7"
+                            markerHeight="7"
+                            orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" style="fill: var(--mud-palette-text-disabled);" />
+                    </marker>
+                    @if (ShowGrid)
+                    {
+                        var gs = EffectiveGridSpacing;
+                        <pattern id="@_gridPatternId"
+                                 width="@Fsvg(gs)"
+                                 height="@Fsvg(gs)"
+                                 patternUnits="userSpaceOnUse">
+                            <path d="@($"M {Fsvg(gs)} 0 L 0 0 0 {Fsvg(gs)}")"
+                                  fill="none"
+                                  stroke="@GridStroke"
+                                  stroke-width="@Fsvg(GridStrokeWidth)" />
+                        </pattern>
+                    }
+                </defs>
+
+                @if (ShowGrid)
+                {
+                    <g class="cg-diagram-grid" pointer-events="none" aria-hidden="true">
+                        <rect x="@F(_displayMinX)"
+                              y="@F(_displayMinY)"
+                              width="@F(DisplayWidth)"
+                              height="@F(DisplayHeight)"
+                              fill="@($"url(#{_gridPatternId})")"
+                              opacity="@Fsvg(GridOpacity)" />
+                    </g>
+                }
+
+                @foreach (var edge in _resolvedEdges)
+                {
+                    if (!_positions.TryGetValue(edge.FromId, out var p1) || !_positions.TryGetValue(edge.ToId, out var p2))
+                        continue;
+                    <g data-cg-edge-group
+                       data-from="@edge.FromId"
+                       data-to="@edge.ToId"
+                       @onmouseenter="@(() => SetHoveredEdge(edge))"
+                       @onmouseleave="@ClearHoveredEdge">
+                        <title>@EdgeTooltip(edge)</title>
+                        <line stroke="@EdgeStroke(edge)"
+                              stroke-width="2"
+                              fill="none"
+                              pointer-events="none"
+                              x1="@F(p1.X)" y1="@F(p1.Y)" x2="@F(p2.X)" y2="@F(p2.Y)"
+                              marker-end="@($"url(#{_markerId})")" />
+                        <line data-cg-edge-hit
+                              stroke="transparent"
+                              stroke-width="14"
+                              pointer-events="stroke"
+                              x1="@F(p1.X)" y1="@F(p1.Y)" x2="@F(p2.X)" y2="@F(p2.Y)" />
+                    </g>
+                }
+
+                @foreach (var node in _resolvedNodes)
+                {
+                    if (!_positions.TryGetValue(node.Id, out var pos))
+                        continue;
+                    var selected = _selectedIds.Contains(node.Id);
+                    <MudDiagramNode Node="node"
+                                    Tx="@F(pos.X)"
+                                    Ty="@F(pos.Y)"
+                                    Selected="selected"
+                                    NodeTemplate="NodeTemplate" />
+                }
+            </svg>
+            </div>
+        </MudPaper>
+
+        @if (_selectedIds.Count == 1 && SingleSelectedNode() is { } one)
+        {
+            <MudPaper Outlined="true" Class="mud-width-full pa-4" Elevation="0" aria-live="polite">
+                <MudText Typo="Typo.h6" Class="mb-1">@one.Label</MudText>
+                @if (!string.IsNullOrWhiteSpace(one.Description))
+                {
+                    <MudText Typo="Typo.body2" Class="mb-3">@one.Description</MudText>
+                }
+                <MudDivider Class="mb-2" />
+                <MudStack Spacing="1">
+                    @foreach (var r in OutgoingEdges(one.Id))
+                    {
+                        <MudText Typo="Typo.body2">To <strong>@LabelForId(r.ToId)</strong>@(!string.IsNullOrEmpty(r.Label) ? $" — {r.Label}" : "")</MudText>
+                    }
+                    @foreach (var r in IncomingEdges(one.Id))
+                    {
+                        <MudText Typo="Typo.body2">From <strong>@LabelForId(r.FromId)</strong>@(!string.IsNullOrEmpty(r.Label) ? $" — {r.Label}" : "")</MudText>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+        else if (_selectedIds.Count > 1)
+        {
+            <MudPaper Outlined="true" Class="mud-width-full pa-4" Elevation="0" aria-live="polite">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">@_selectedIds.Count nodes selected</MudText>
+                <MudStack Spacing="1">
+                    @foreach (var id in _selectedIds.OrderBy(x => x))
+                    {
+                        <MudText Typo="Typo.body2"><strong>@LabelForId(id)</strong></MudText>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+    </MudStack>
+</MudPaper>

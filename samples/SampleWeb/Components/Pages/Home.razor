@@ -1,0 +1,420 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ISnackbar Snackbar
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<p>Welcome to your new app. The diagram control lives in <strong>CodeGator.MudBlazor</strong>; pick a sample below to exercise layouts and generic nodes.</p>
+
+<MudStack Spacing="3" Class="mud-width-full mb-3" Style="max-width: 44rem;">
+    <MudSelect T="DiagramSample"
+               Label="Sample diagram"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Value="_sample"
+               ValueChanged="OnSampleChanged"
+               AnchorOrigin="Origin.BottomCenter">
+        <MudSelectItem Value="@(DiagramSample.Organization)">Organization (top-down)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.ProcessFlow)">Process flow (left-to-right)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.PlatformHub)">Platform hub (radial)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.SystemLayers)">System layers (top-down)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.DataPipeline)">Data pipeline (left-to-right)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.ForceDirectedMesh)">Dependency mesh (force-directed)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.SwimlaneHandoff)">Swimlanes (Customer / Ops / Billing)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.CircularServices)">Service ring (circular)</MudSelectItem>
+        <MudSelectItem Value="@(DiagramSample.MixedPresentation)">SVG + custom node demo</MudSelectItem>
+    </MudSelect>
+</MudStack>
+
+<div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+    <span class="text-secondary small mb-0">Diagram zoom (test)</span>
+    <div class="btn-group" role="group" aria-label="Diagram zoom">
+        <button type="button" class="btn btn-outline-primary btn-sm" @onclick="ZoomOut">Zoom out</button>
+        <span class="align-self-center px-3 py-1 small fw-semibold text-body-secondary border rounded" aria-live="polite">@ZoomPercent</span>
+        <button type="button" class="btn btn-outline-primary btn-sm" @onclick="ZoomIn">Zoom in</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ResetZoom">Reset</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="FitDiagramToView">Fit to view</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ApplyDiagramLayout">Apply layout</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="PrintDiagram">Print</button>
+    </div>
+    <MudCheckBox T="bool"
+                 @bind-Value="_showGrid"
+                 Color="Color.Primary"
+                 Label="Show grid"
+                 Dense="true"
+                 Class="flex-shrink-0" />
+</div>
+
+<MudDiagram @ref="_diagram"
+            @bind-Zoom="_diagramZoom"
+            Title="@_diagramTitle"
+            Subtitle="@_diagramSubtitle"
+            Nodes="_nodes"
+            Edges="_edges"
+            Layout="_layout"
+            ViewportMaxHeightCss="min(420px, 55vh)"
+            AutoFitToViewport="true"
+            ShowGrid="_showGrid"
+            NodeTemplate="@MixedNodeTemplate"
+            OnNodeClick="OnDiagramNodeClick"
+            OnNodeContextMenu="OnDiagramNodeContextMenu"
+            OnEdgeClick="OnDiagramEdgeClick"
+            OnEdgeContextMenu="OnDiagramEdgeContextMenu">
+    <Legend>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-0 me-1">Node styles:</MudText>
+        <MudChip T="string" Text="Default" Variant="Variant.Outlined" Size="Size.Small" />
+        <MudChip T="string" Text="Primary" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small" />
+        <MudChip T="string" Text="Secondary" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" />
+        <MudChip T="string" Text="Tertiary" Color="Color.Tertiary" Variant="Variant.Filled" Size="Size.Small" />
+    </Legend>
+</MudDiagram>
+
+@code {
+    enum DiagramSample
+    {
+        Organization,
+        ProcessFlow,
+        PlatformHub,
+        SystemLayers,
+        DataPipeline,
+        ForceDirectedMesh,
+        SwimlaneHandoff,
+        CircularServices,
+        MixedPresentation
+    }
+
+    const double MaxZ = MudDiagram.MaxZoomDefault;
+    const double MinZ = MudDiagram.MinZoomDefault;
+
+    MudDiagram? _diagram;
+
+    double _diagramZoom = MudDiagram.DefaultZoomLevel;
+
+    DiagramSample _sample = DiagramSample.Organization;
+
+    bool _showGrid = true;
+
+    string _diagramTitle = "";
+    string? _diagramSubtitle;
+    IReadOnlyList<DiagramNode> _nodes = Array.Empty<DiagramNode>();
+    IReadOnlyList<DiagramEdge> _edges = Array.Empty<DiagramEdge>();
+    DiagramLayoutKind _layout = DiagramLayoutKind.HierarchicalTopDown;
+
+    string ZoomPercent => $"{_diagramZoom * 100:0}%";
+
+    RenderFragment<DiagramNodeRenderContext>? MixedNodeTemplate =>
+        _sample == DiagramSample.MixedPresentation ? MixedCustomNode : null;
+
+    static readonly RenderFragment<DiagramNodeRenderContext> MixedCustomNode = ctx => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class",
+            "h-100 w-100 d-flex align-items-center justify-content-center rounded small fw-semibold px-1 "
+            + (ctx.Selected ? "text-white bg-primary border" : "bg-light border border-secondary"));
+        builder.AddContent(2, ctx.Node.Label);
+        builder.CloseElement();
+    };
+
+    protected override void OnInitialized()
+    {
+        Apply(_sample);
+    }
+
+    void OnSampleChanged(DiagramSample value)
+    {
+        _sample = value;
+        Apply(value);
+    }
+
+    void Apply(DiagramSample sample)
+    {
+        switch (sample)
+        {
+            case DiagramSample.Organization:
+                _layout = DiagramLayoutKind.HierarchicalTopDown;
+                _diagramTitle = "Organization";
+                _diagramSubtitle = "Classic org chart: roots are nodes with no incoming edges; layers flow downward.";
+                _nodes = SampleData.OrganizationNodes;
+                _edges = SampleData.OrganizationEdges;
+                break;
+            case DiagramSample.ProcessFlow:
+                _layout = DiagramLayoutKind.HierarchicalLeftToRight;
+                _diagramTitle = "Process flow";
+                _diagramSubtitle = "Approval pipeline with a fork for parallel review paths.";
+                _nodes = SampleData.ProcessNodes;
+                _edges = SampleData.ProcessEdges;
+                break;
+            case DiagramSample.PlatformHub:
+                _layout = DiagramLayoutKind.Radial;
+                _diagramTitle = "Platform hub";
+                _diagramSubtitle = "API surface in the center with capability areas on the first ring.";
+                _nodes = SampleData.PlatformNodes;
+                _edges = SampleData.PlatformEdges;
+                break;
+            case DiagramSample.SystemLayers:
+                _layout = DiagramLayoutKind.HierarchicalTopDown;
+                _diagramTitle = "Logical layers";
+                _diagramSubtitle = "Presentation through infrastructure — still the same generic nodes and links.";
+                _nodes = SampleData.LayersNodes;
+                _edges = SampleData.LayersEdges;
+                break;
+            case DiagramSample.DataPipeline:
+                _layout = DiagramLayoutKind.HierarchicalLeftToRight;
+                _diagramTitle = "Data pipeline";
+                _diagramSubtitle = "Ingestion to serving with quality checkpoints along the way.";
+                _nodes = SampleData.PipelineNodes;
+                _edges = SampleData.PipelineEdges;
+                break;
+            case DiagramSample.ForceDirectedMesh:
+                _layout = DiagramLayoutKind.ForceDirected;
+                _diagramTitle = "Dependency mesh";
+                _diagramSubtitle = "Force-directed layout for cyclic, non-tree graphs (Fruchterman–Reingold style).";
+                _nodes = SampleData.MeshNodes;
+                _edges = SampleData.MeshEdges;
+                break;
+            case DiagramSample.SwimlaneHandoff:
+                _layout = DiagramLayoutKind.Swimlanes;
+                _diagramTitle = "Swimlane handoff";
+                _diagramSubtitle = "Rows from DiagramNode.SwimlaneId; edges can cross lanes.";
+                _nodes = SampleData.SwimlaneNodes;
+                _edges = SampleData.SwimlaneEdges;
+                break;
+            case DiagramSample.CircularServices:
+                _layout = DiagramLayoutKind.CircularRing;
+                _diagramTitle = "Service ring";
+                _diagramSubtitle = "All nodes on one circle; order follows node id.";
+                _nodes = SampleData.RingNodes;
+                _edges = SampleData.RingEdges;
+                break;
+            case DiagramSample.MixedPresentation:
+                _layout = DiagramLayoutKind.HierarchicalTopDown;
+                _diagramTitle = "Presentation modes";
+                _diagramSubtitle = "Surface card, SVG file via _content, and a node rendered with NodeTemplate.";
+                _nodes = SampleData.MixedNodes;
+                _edges = SampleData.MixedEdges;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(sample), sample, null);
+        }
+    }
+
+    void ZoomIn() => _diagramZoom = Math.Min(MaxZ, _diagramZoom * 1.15);
+
+    void ZoomOut() => _diagramZoom = Math.Max(MinZ, _diagramZoom / 1.15);
+
+    void ResetZoom() => _diagramZoom = MudDiagram.DefaultZoomLevel;
+
+    async Task FitDiagramToView()
+    {
+        if (_diagram is null)
+            return;
+        await _diagram.FitToViewportAsync();
+    }
+
+    async Task ApplyDiagramLayout()
+    {
+        if (_diagram is null)
+            return;
+        await _diagram.ApplyLayoutAsync();
+    }
+
+    async Task PrintDiagram()
+    {
+        if (_diagram is null)
+            return;
+        var ok = await _diagram.PrintAsync();
+        if (!ok)
+            Snackbar.Add("Could not open the print window. Allow pop-ups for this site and try again.", Severity.Warning);
+    }
+
+    Task OnDiagramNodeClick(DiagramNodeInteractionEventArgs e)
+    {
+        Snackbar.Add($"Node click: {e.Node.Label}", Severity.Info);
+        return Task.CompletedTask;
+    }
+
+    Task OnDiagramNodeContextMenu(DiagramNodeInteractionEventArgs e)
+    {
+        Snackbar.Add($"Node context: {e.Node.Label} @ ({e.ClientX:0}, {e.ClientY:0})", Severity.Normal);
+        return Task.CompletedTask;
+    }
+
+    Task OnDiagramEdgeClick(DiagramEdgeInteractionEventArgs e)
+    {
+        Snackbar.Add($"Edge click: {e.Edge.FromId} → {e.Edge.ToId}", Severity.Info);
+        return Task.CompletedTask;
+    }
+
+    Task OnDiagramEdgeContextMenu(DiagramEdgeInteractionEventArgs e)
+    {
+        Snackbar.Add($"Edge context: {e.Edge.FromId} → {e.Edge.ToId}", Severity.Normal);
+        return Task.CompletedTask;
+    }
+
+    static class SampleData
+    {
+        public static readonly IReadOnlyList<DiagramNode> OrganizationNodes =
+        [
+            new("exec", "Chief Executive", "Sets direction and priorities.", DiagramNodeVisualStyle.Primary),
+            new("vp-eng", "VP Engineering", "Owns product delivery.", DiagramNodeVisualStyle.Secondary),
+            new("vp-sales", "VP Sales", "Owns revenue motion.", DiagramNodeVisualStyle.Secondary),
+            new("team-core", "Core product", "Feature squads for the flagship line.", DiagramNodeVisualStyle.Tertiary),
+            new("team-growth", "Growth", "Experimentation and onboarding.", DiagramNodeVisualStyle.Tertiary),
+            new("team-revenue", "Enterprise accounts", "Named accounts and expansion.", DiagramNodeVisualStyle.Tertiary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> OrganizationEdges =
+        [
+            new("exec", "vp-eng"),
+            new("exec", "vp-sales"),
+            new("vp-eng", "team-core"),
+            new("vp-eng", "team-growth"),
+            new("vp-sales", "team-revenue"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> ProcessNodes =
+        [
+            new("intake", "Intake", "Capture request and context.", DiagramNodeVisualStyle.Primary),
+            new("triage", "Triage", "Classify urgency and owner.", DiagramNodeVisualStyle.Secondary),
+            new("review-a", "Policy review", "Compliance sign-off.", DiagramNodeVisualStyle.Tertiary),
+            new("review-b", "Tech review", "Architecture and capacity.", DiagramNodeVisualStyle.Tertiary),
+            new("approve", "Approve", "Final decision recorded.", DiagramNodeVisualStyle.Secondary),
+            new("deliver", "Deliver", "Work released and communicated.", DiagramNodeVisualStyle.Primary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> ProcessEdges =
+        [
+            new("intake", "triage"),
+            new("triage", "review-a", "optional"),
+            new("triage", "review-b", "optional"),
+            new("review-a", "approve"),
+            new("review-b", "approve"),
+            new("approve", "deliver"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> PlatformNodes =
+        [
+            new("edge", "Public API", "Edge tier and routing.", DiagramNodeVisualStyle.Primary),
+            new("id", "Identity", "AuthN, authZ, sessions.", DiagramNodeVisualStyle.Secondary),
+            new("cat", "Catalog", "Items, pricing, availability.", DiagramNodeVisualStyle.Secondary),
+            new("ord", "Orders", "Checkout and fulfillment orchestration.", DiagramNodeVisualStyle.Secondary),
+            new("evt", "Events", "Async notifications and webhooks.", DiagramNodeVisualStyle.Tertiary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> PlatformEdges =
+        [
+            new("edge", "id"),
+            new("edge", "cat"),
+            new("edge", "ord"),
+            new("edge", "evt"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> LayersNodes =
+        [
+            new("ui", "Experience", "Web and mobile clients.", DiagramNodeVisualStyle.Primary),
+            new("bff", "Orchestration", "Aggregates and shapes APIs.", DiagramNodeVisualStyle.Secondary),
+            new("svc", "Domain services", "Core business operations.", DiagramNodeVisualStyle.Secondary),
+            new("data", "Data platform", "Storage, caches, analytics.", DiagramNodeVisualStyle.Tertiary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> LayersEdges =
+        [
+            new("ui", "bff"),
+            new("bff", "svc"),
+            new("svc", "data"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> PipelineNodes =
+        [
+            new("src", "Sources", "Databases, streams, files.", DiagramNodeVisualStyle.Primary),
+            new("ing", "Ingest", "Landing zone and validation.", DiagramNodeVisualStyle.Secondary),
+            new("cur", "Curate", "Models, contracts, lineage.", DiagramNodeVisualStyle.Tertiary),
+            new("wh", "Warehouse", "Historical store and metrics.", DiagramNodeVisualStyle.Secondary),
+            new("mart", "Marts", "Subject areas for consumers.", DiagramNodeVisualStyle.Tertiary),
+            new("svc", "Serving", "APIs and BI exports.", DiagramNodeVisualStyle.Primary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> PipelineEdges =
+        [
+            new("src", "ing"),
+            new("ing", "cur"),
+            new("cur", "wh"),
+            new("wh", "mart"),
+            new("mart", "svc"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> MixedNodes =
+        [
+            new("plain", "Surface", "Default Mud card (Surface).", DiagramNodeVisualStyle.Primary),
+            new("svgfile", "SVG file", "Rasterized from library wwwroot.", DiagramNodeVisualStyle.Default,
+                DiagramNodePresentation.Svg, svgHref: "_content/CodeGator.MudBlazor/sample-node.svg"),
+            new("custom", "Custom", "Markup from Home.NodeTemplate.", DiagramNodeVisualStyle.Default,
+                DiagramNodePresentation.Custom),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> MixedEdges =
+        [
+            new("plain", "svgfile"),
+            new("svgfile", "custom"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> MeshNodes =
+        [
+            new("mesh-a", "Service A", "Part of a cyclic dependency sketch.", DiagramNodeVisualStyle.Primary),
+            new("mesh-b", "Service B", "Pulls from A and C.", DiagramNodeVisualStyle.Secondary),
+            new("mesh-c", "Service C", "Shared dependency fan-out.", DiagramNodeVisualStyle.Secondary),
+            new("mesh-d", "Service D", "Feeds back into the mesh.", DiagramNodeVisualStyle.Tertiary),
+            new("mesh-e", "Service E", "Optional bridge node.", DiagramNodeVisualStyle.Tertiary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> MeshEdges =
+        [
+            new("mesh-a", "mesh-b"),
+            new("mesh-b", "mesh-c"),
+            new("mesh-c", "mesh-d"),
+            new("mesh-d", "mesh-e"),
+            new("mesh-e", "mesh-a"),
+            new("mesh-a", "mesh-c"),
+            new("mesh-b", "mesh-d"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> SwimlaneNodes =
+        [
+            new("sl-req", "Request", "Customer opens a ticket.", DiagramNodeVisualStyle.Primary, swimlaneId: "Customer"),
+            new("sl-track", "Portal", "Status and attachments.", DiagramNodeVisualStyle.Secondary, swimlaneId: "Customer"),
+            new("sl-triage", "Triage", "Ops picks up and routes.", DiagramNodeVisualStyle.Primary, swimlaneId: "Operations"),
+            new("sl-ship", "Fulfill", "Work completed and closed.", DiagramNodeVisualStyle.Secondary, swimlaneId: "Operations"),
+            new("sl-inv", "Invoice", "Billing finalizes charges.", DiagramNodeVisualStyle.Tertiary, swimlaneId: "Billing"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> SwimlaneEdges =
+        [
+            new("sl-req", "sl-triage"),
+            new("sl-track", "sl-triage"),
+            new("sl-triage", "sl-ship"),
+            new("sl-ship", "sl-inv"),
+        ];
+
+        public static readonly IReadOnlyList<DiagramNode> RingNodes =
+        [
+            new("ring-api", "Gateway", "Public entry.", DiagramNodeVisualStyle.Primary),
+            new("ring-auth", "Auth", "Tokens and sessions.", DiagramNodeVisualStyle.Secondary),
+            new("ring-cat", "Catalog", "Product data.", DiagramNodeVisualStyle.Secondary),
+            new("ring-ord", "Orders", "Order state.", DiagramNodeVisualStyle.Tertiary),
+            new("ring-evt", "Events", "Outbox and webhooks.", DiagramNodeVisualStyle.Tertiary),
+            new("ring-obs", "Observability", "Metrics and traces.", DiagramNodeVisualStyle.Primary),
+        ];
+
+        public static readonly IReadOnlyList<DiagramEdge> RingEdges =
+        [
+            new("ring-api", "ring-auth"),
+            new("ring-auth", "ring-cat"),
+            new("ring-cat", "ring-ord"),
+            new("ring-ord", "ring-evt"),
+            new("ring-evt", "ring-obs"),
+            new("ring-obs", "ring-api"),
+        ];
+    }
+}

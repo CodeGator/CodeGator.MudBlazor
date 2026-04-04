@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../src/CodeGator.MudBlazor/CodeGator.MudBlazor.csproj" />
+  <Project Path="SampleWeb/SampleWeb.csproj" />
+</Solution>

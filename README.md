@@ -10,6 +10,9 @@
 #### What does it do?
 This package contains MudBlazor derived controls that are used by various CodeGator solutions.
 
+#### What controls are in the package?
+* MudDiagram - this control creates various types of diagrams.
+
 #### What platform(s) does it support?
 * .NET 10.x or higher
 

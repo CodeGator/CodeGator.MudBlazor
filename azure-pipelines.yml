@@ -6,7 +6,7 @@ pool:
 
 variables:
   BuildConfiguration: 'Debug'
-  SolutionName: CodeGator.MudBlazorg
+  SolutionName: CodeGator.MudBlazor
   SolutionPath: 'src/$(SolutionName)'
   
 steps:

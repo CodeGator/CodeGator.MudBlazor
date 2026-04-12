@@ -34,20 +34,20 @@ steps:
     nugetConfigPath: 'nuget.config'
     feedsToUse: config
     arguments: '--interactive'
-    projects: '$(SolutionPath).slnx'
+    projects: '$(SolutionPath).sln'
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
   inputs:
     command: 'build'
     arguments: '--configuration $(BuildConfiguration) /p:SourceRevisionId=$(Build.SourceVersion)'
-    projects: '$(SolutionPath).slnx'
+    projects: '$(SolutionPath).sln'
 
 - task: DotNetCoreCLI@2
   displayName: "dotnet test"
   inputs:
     command: 'test'
-    projects: '$(SolutionPath).slnx'
+    projects: '$(SolutionPath).sln'
     arguments: '--configuration $(BuildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura'
     publishTestResults: true
     nobuild: true
@@ -57,7 +57,7 @@ steps:
   inputs:
     command: 'pack'
     arguments: '--configuration $(BuildConfiguration)'    
-    packagesToPack: '$(SolutionPath).slnx'
+    packagesToPack: '$(SolutionPath).sln'
     nobuild: true
     includesymbols: true
     includesource: true

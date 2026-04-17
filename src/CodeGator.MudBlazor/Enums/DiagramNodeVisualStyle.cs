@@ -1,8 +1,7 @@
 namespace CodeGator.MudBlazor;
 
 /// <summary>
-/// This enumeration selects Mud theme styling for default surface-rendered diagram
-/// nodes.
+/// This enumeration represents Mud theme styling for surface-rendered diagram nodes.
 /// </summary>
 public enum DiagramNodeVisualStyle
 {

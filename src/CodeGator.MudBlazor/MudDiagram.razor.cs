@@ -179,31 +179,31 @@ public partial class MudDiagram
     public IReadOnlyList<DiagramEdge>? Edges { get; set; }
 
     /// <summary>
-    /// This event callback is raised after a primary click on a node without drag.
+    /// This property supplies the callback raised after a node click without drag.
     /// </summary>
     [Parameter]
     public EventCallback<DiagramNodeInteractionEventArgs> OnNodeClick { get; set; }
 
     /// <summary>
-    /// This event callback is raised when the context menu opens on a node.
+    /// This property supplies the callback raised when a node context menu opens.
     /// </summary>
     [Parameter]
     public EventCallback<DiagramNodeInteractionEventArgs> OnNodeContextMenu { get; set; }
 
     /// <summary>
-    /// This event callback is raised after a primary click on an edge without drag.
+    /// This property supplies the callback raised after an edge click without drag.
     /// </summary>
     [Parameter]
     public EventCallback<DiagramEdgeInteractionEventArgs> OnEdgeClick { get; set; }
 
     /// <summary>
-    /// This event callback is raised when the context menu opens on an edge.
+    /// This property supplies the callback raised when an edge context menu opens.
     /// </summary>
     [Parameter]
     public EventCallback<DiagramEdgeInteractionEventArgs> OnEdgeContextMenu { get; set; }
 
     /// <summary>
-    /// This event callback is raised after layout completes and the diagram renders.
+    /// This property supplies the callback raised after layout and a render pass.
     /// </summary>
     [Parameter]
     public EventCallback<DiagramLayoutAppliedEventArgs> OnLayoutApplied { get; set; }
@@ -296,7 +296,7 @@ public partial class MudDiagram
     public double Zoom { get; set; } = DefaultZoomLevel;
 
     /// <summary>
-    /// This event callback notifies the host when zoom changes from the diagram.
+    /// This property supplies the callback invoked when diagram zoom changes.
     /// </summary>
     [Parameter]
     public EventCallback<double> ZoomChanged { get; set; }

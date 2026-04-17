@@ -7,9 +7,11 @@ namespace CodeGator.MudBlazor;
 public sealed class DiagramNode
 {
     /// <summary>
-    /// This constructor initializes a diagram node with identifiers, optional
-    /// description, visuals, and swimlane membership.
+    /// This constructor initializes a new instance of the DiagramNode class.
     /// </summary>
+    /// <remarks>
+    /// Initializes identifiers, optional description, visuals, and swimlane membership.
+    /// </remarks>
     /// <param name="id">This parameter specifies the stable node identifier.</param>
     /// <param name="label">This parameter specifies the display label.</param>
     /// <param name="description">This parameter specifies optional detail text.</param>

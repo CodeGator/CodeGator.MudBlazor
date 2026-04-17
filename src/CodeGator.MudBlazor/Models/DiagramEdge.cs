@@ -6,8 +6,11 @@ namespace CodeGator.MudBlazor;
 public sealed class DiagramEdge
 {
     /// <summary>
-    /// This constructor initializes an edge between two node identifiers.
+    /// This constructor initializes a new instance of the DiagramEdge class.
     /// </summary>
+    /// <remarks>
+    /// Connects <paramref name="fromId"/> to <paramref name="toId"/> with an optional <paramref name="label"/>.
+    /// </remarks>
     /// <param name="fromId">This parameter specifies the source node id.</param>
     /// <param name="toId">This parameter specifies the target node id.</param>
     /// <param name="label">This parameter specifies an optional edge label.</param>

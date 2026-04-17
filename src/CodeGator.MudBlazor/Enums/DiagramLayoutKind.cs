@@ -1,8 +1,8 @@
 namespace CodeGator.MudBlazor;
 
 /// <summary>
-/// This enumeration names built-in diagram layout strategies that hosts can select
-/// on <see cref="MudDiagram"/>.
+/// This enumeration represents built-in layout strategies selectable on
+/// <see cref="MudDiagram"/>.
 /// </summary>
 public enum DiagramLayoutKind
 {

@@ -1,8 +1,7 @@
 namespace CodeGator.MudBlazor;
 
 /// <summary>
-/// This enumeration selects how a <see cref="DiagramNode"/> is drawn inside the
-/// SVG.
+/// This enumeration represents how diagram nodes are drawn in the SVG.
 /// </summary>
 /// <remarks>
 /// Options include Mud surface cards, SVG assets or inline markup, or custom HTML

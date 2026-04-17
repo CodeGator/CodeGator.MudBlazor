@@ -85,6 +85,10 @@ public partial class MudDiagramNode
         : $"{Node.Label}: {Node.Description}";
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when <see cref="DiagramNode.Presentation"/> is <see cref="DiagramNodePresentation.Custom"/>
+    /// and <see cref="NodeTemplate"/> is null.
+    /// </exception>
     protected override void OnParametersSet()
     {
         if (IsCustom && NodeTemplate is null)

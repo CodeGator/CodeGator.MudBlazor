@@ -1,8 +1,7 @@
 namespace CodeGator.MudBlazor;
 
 /// <summary>
-/// This interface defines how node positions are computed from the current nodes
-/// and edges.
+/// This interface represents layout positioning from the current nodes and edges.
 /// </summary>
 /// <remarks>
 /// Implementations return a map of node id to content coordinates; the diagram host
